@@ -1,0 +1,8 @@
+{
+  "name": "Prompt Database v2.0",
+  "description": "A clean, easy-to-use prompt database for IWDemy, inspired by prompts.chat.",
+  "requestFramePermissions": [
+    "clipboard-write"
+  ],
+  "majorCapabilities": []
+}
