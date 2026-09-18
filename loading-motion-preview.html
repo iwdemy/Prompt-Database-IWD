@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PROMPT DATABASE — Entrance Motion</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&family=Syne:wght@800;900&family=JetBrains+Mono:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg-canvas: #FAF9F6;
+      --gold: #C69222;
+      --gold-bright: #E5B238;
+      --gold-deep: #8E6510;
+      --charcoal: #11100E;
+      --charcoal-soft: #383430;
+      --text-muted: #7A756F;
+      --speed-mult: 1.333; /* 0.75x cinematic tempo */
+    }
+
+    body {
+      background-color: #F8F9FA;
+      color: #1A1A1A;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* ========================================================================= */
+    /* 1. MOCKUP WORKSPACE BEHIND THE LOADING SCREEN                             */
+    /* ========================================================================= */
+    .app-workspace {
+      min-height: 100vh;
+      background: #F8F9FB;
+      display: flex;
+      flex-direction: column;
+      opacity: 1;
+      filter: blur(0px);
+      transition: filter 0.5s ease;
+    }
+
+    .app-navbar {
+      height: 68px;
+      background: #FFFFFF;
+      border-bottom: 1px solid #E5E7EB;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 5vw;
+    }
+
+    .app-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 18px;
+      letter-spacing: -0.02em;
+    }
+
+    .brand-badge {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: linear-gradient(135deg, #C69222, #E5B238);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 900;
+      box-shadow: 0 4px 12px rgba(198, 146, 34, 0.3);
+    }
+
+    .app-nav-links {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #4B5563;
+    }
+
+    .app-nav-links .active {
+      color: #111827;
+      font-weight: 700;
+    }
+
+    .app-hero {
+      padding: 40px 5vw 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .app-hero h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: 28px;
+      font-weight: 800;
+      color: #111827;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .app-hero p {
+      color: #6B7280;
+      font-size: 14.5px;
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 20px;
+      padding: 20px 5vw 60px;
+      max-width: 1200px;
+      margin: 0 auto;
+      width: 100%;
+    }
+
+    .mock-card {
+      background: #FFFFFF;
+      border: 1px solid #E5E7EB;
+      border-radius: 14px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .mock-card .card-tag {
+      align-self: flex-start;
+      font-size: 11px;
+      font-weight: 700;
+      color: #B45309;
+      background: #FEF3C7;
+      padding: 3px 10px;
+      border-radius: 6px;
+    }
+
+    .mock-card h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: #1F2937;
+    }
+
+    .mock-card p {
+      font-size: 13px;
+      color: #6B7280;
+      line-height: 1.5;
+    }
+
+    /* ========================================================================= */
+    /* 2. THE LOADING ENTRANCE OVERLAY (SYNE + LEVEL 3 COMPACT + LASER BEAM)     */
+    /* ========================================================================= */
+    .intro-overlay {
+      position: fixed;
+      inset: 0;
+      background: radial-gradient(circle at 50% 34%, #FFFFFF 0%, #FAF8F5 45%, #EFECE3 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      overflow: hidden;
+      user-select: none;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /* When loading finishes: smooth seamless entrance (direct into app) */
+    .intro-overlay.fade-out {
+      opacity: 0;
+      transform: scale(1.04);
+      pointer-events: none;
+    }
+
+    /* Subtle architectural grid */
+    .bg-grid {
+      position: absolute;
+      inset: 0;
+      background-image: 
+        linear-gradient(to right, rgba(0, 0, 0, 0.022) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(0, 0, 0, 0.022) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 1;
+      mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+      -webkit-mask-image: radial-gradient(circle at center, black 40%, transparent 80%);
+    }
+
+    /* Soft warm ambient champagne glow */
+    .ambient-glow {
+      position: absolute;
+      width: 550px;
+      height: 550px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(229, 178, 56, 0.14) 0%, rgba(198, 146, 34, 0.04) 50%, transparent 75%);
+      top: 48%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      filter: blur(60px);
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    /* Viewport Shake for tactile punch */
+    #viewportShake {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      will-change: transform;
+    }
+
+    .shaking {
+      animation: cameraShock 0.3s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+    }
+
+    @keyframes cameraShock {
+      0% { transform: translate(0, 0); }
+      20% { transform: translate(-3px, 2px) scale(1.005); }
+      40% { transform: translate(2px, -2px) scale(1.002); }
+      60% { transform: translate(-1px, 1px) scale(1.001); }
+      100% { transform: translate(0, 0) scale(1); }
+    }
+
+    /* Initial impact flash */
+    .impact-flash {
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at center, rgba(255, 255, 255, 0.9) 0%, rgba(229, 178, 56, 0.2) 50%, transparent 75%);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    .flashing {
+      animation: flashPulse 0.4s ease-out;
+    }
+
+    @keyframes flashPulse {
+      0% { opacity: 1; transform: scale(0.96); }
+      100% { opacity: 0; transform: scale(1.2); }
+    }
+
+    /* ========================================================================= */
+    /* 3. SYNE + LEVEL 3 COMPACT LUXURY TYPOGRAPHY                               */
+    /* ========================================================================= */
+    .title-stage {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 20;
+    }
+
+    .title-row {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      text-transform: uppercase;
+      line-height: 0.90;
+      /* LEVEL 3 COMPACT PROPORTION: Sangat Presisi & Elegan */
+      font-size: clamp(26px, 4.2vw, 46px);
+      letter-spacing: -0.025em;
+      gap: 2px;
+      text-align: center;
+      position: relative;
+    }
+
+    /* Line 1: PROMPT */
+    .word-prompt {
+      color: var(--charcoal);
+      display: inline-flex;
+      position: relative;
+      text-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    }
+
+    /* Line 2: DATABASE in Liquid Imperial Gold */
+    .word-database {
+      color: var(--gold);
+      background: linear-gradient(135deg, #8E6510 0%, #C69222 28%, #F2C95C 50%, #C69222 75%, #7D570A 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      filter: drop-shadow(0 4px 20px rgba(198, 146, 34, 0.35));
+      display: inline-flex;
+      position: relative;
+    }
+
+    /* Kinetic Split Characters */
+    .char {
+      display: inline-block;
+      opacity: 0;
+      will-change: transform, opacity, filter;
+    }
+
+    .anim-active .char {
+      animation: appleDumbarMerge calc(0.72s * var(--speed-mult)) cubic-bezier(0.12, 1.08, 0.22, 1) forwards;
+    }
+
+    @keyframes appleDumbarMerge {
+      0% {
+        opacity: 0;
+        transform: scale(2.0) scaleX(1.35) skewX(-20deg) translateY(-38px);
+        filter: blur(14px);
+      }
+      65% {
+        opacity: 1;
+        transform: scale(0.96) scaleX(0.96) skewX(4deg) translateY(3px);
+        filter: blur(0px);
+      }
+      82% {
+        transform: scale(1.02) scaleX(1.01) skewX(-1.5deg) translateY(-1px);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1) scaleX(1) skewX(0deg) translateY(0);
+        filter: blur(0px);
+      }
+    }
+
+    /* Specular Light Beam sweep across Database */
+    .specular-beam {
+      position: absolute;
+      inset: -30%;
+      background: linear-gradient(105deg, transparent 38%, rgba(255, 255, 255, 0.95) 50%, transparent 62%);
+      transform: translateX(-160%);
+      pointer-events: none;
+      mix-blend-mode: overlay;
+      opacity: 0;
+      z-index: 25;
+    }
+
+    .anim-active .specular-beam {
+      animation: beamSweep calc(0.9s * var(--speed-mult)) ease-out forwards;
+      animation-delay: calc(0.95s * var(--speed-mult));
+    }
+
+    @keyframes beamSweep {
+      0% { transform: translateX(-160%); opacity: 0; }
+      25% { opacity: 1; }
+      100% { transform: translateX(160%); opacity: 0; }
+    }
+
+    /* ========================================================================= */
+    /* 4. LASER BEAM LOADER (LEVEL 3 COMPACT RATIO)                              */
+    /* ========================================================================= */
+    .loader-container {
+      margin-top: 24px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      max-width: 260px;
+      z-index: 20;
+    }
+
+    .loader-laser {
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .laser-track {
+      width: 100%;
+      height: 2.5px;
+      background: rgba(0, 0, 0, 0.07);
+      border-radius: 999px;
+      position: relative;
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .laser-fill {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 0%;
+      background: linear-gradient(90deg, #966A0E 0%, #C69222 40%, #F2C95C 85%, #FFFFFF 100%);
+      box-shadow: 0 0 14px rgba(229, 178, 56, 0.85), 0 0 5px #C69222;
+      border-radius: 999px;
+      transition: width 0.06s linear;
+    }
+
+    .laser-bead {
+      position: absolute;
+      right: -3px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 6.5px;
+      height: 6.5px;
+      border-radius: 50%;
+      background: #FFFFFF;
+      box-shadow: 0 0 8px #FFFFFF, 0 0 12px var(--gold-bright);
+    }
+
+    .laser-meta {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10.5px;
+      color: var(--text-muted);
+    }
+
+    .laser-meta .status {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--charcoal-soft);
+      font-weight: 600;
+    }
+
+    .laser-meta .dot {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: var(--gold);
+      box-shadow: 0 0 7px var(--gold);
+      animation: blink 0.8s infinite alternate;
+    }
+
+    .laser-meta .percent {
+      color: var(--gold-deep);
+      font-weight: 800;
+      letter-spacing: 0.5px;
+    }
+
+    @keyframes blink {
+      0% { opacity: 0.25; transform: scale(0.9); }
+      100% { opacity: 1; transform: scale(1.15); }
+    }
+
+    /* ========================================================================= */
+    /* 5. FLOATING BOTTOM REPLAY CONTROLLER                                      */
+    /* ========================================================================= */
+    .floating-replay-bar {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      border-radius: 999px;
+      padding: 8px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 16px 36px rgba(0, 0, 0, 0.12);
+      z-index: 10000;
+    }
+
+    .btn-replay {
+      background: linear-gradient(135deg, #C69222 0%, #E5B238 100%);
+      color: #FFFFFF;
+      border: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 800;
+      padding: 7px 16px;
+      border-radius: 999px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      transition: all 0.2s ease;
+      box-shadow: 0 3px 12px rgba(198, 146, 34, 0.35);
+    }
+
+    .btn-replay:hover {
+      background: linear-gradient(135deg, #D6A232 0%, #F5C248 100%);
+      transform: scale(1.03);
+    }
+
+    .btn-replay svg {
+      stroke: #FFFFFF;
+    }
+
+    .spec-info {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: #6B7280;
+      font-weight: 600;
+    }
+
+    .spec-info strong {
+      color: #111827;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. The Actual Application Workspace (Revealed instantly when loading completes) -->
+  <div class="app-workspace" id="appWorkspace">
+    <nav class="app-navbar">
+      <div class="app-brand">
+        <div class="brand-badge">P</div>
+        <span>PROMPT DATABASE</span>
+      </div>
+      <div class="app-nav-links">
+        <span class="active">Koleksi Prompt</span>
+        <span>Growth Journal</span>
+        <span>Before vs After</span>
+        <span>Evaluasi Trainer</span>
+      </div>
+    </nav>
+
+    <div class="app-hero">
+      <h1>Selamat Datang di Prompt Database</h1>
+      <p>Akses kurikulum prompting profesional, SCQA framework, dan growth journal Anda.</p>
+    </div>
+
+    <div class="card-grid">
+      <div class="mock-card">
+        <span class="card-tag">SCQA Framework</span>
+        <h3>Strategic Executive Briefing</h3>
+        <p>Formula prompt untuk menyusun ringkasan eksekutif dengan struktur Situation, Complication, Question, Answer.</p>
+      </div>
+      <div class="mock-card">
+        <span class="card-tag">A.C.T.I.O.N.S.</span>
+        <h3>Master Prompt Engineering</h3>
+        <p>Struktur prompt multi-dimensi untuk instruksi AI dengan akurasi 99% tanpa halusinasi logika.</p>
+      </div>
+      <div class="mock-card">
+        <span class="card-tag">Growth Journal</span>
+        <h3>Refleksi Pembelajaran Mandiri</h3>
+        <p>Dokumentasi progres belajar dan evolusi kualitas output prompt dari waktu ke waktu.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. The Loading Motion Overlay (Syne + Level 3 + Laser Beam) -->
+  <div class="intro-overlay" id="introOverlay">
+    <div class="bg-grid"></div>
+    <div class="ambient-glow"></div>
+    <div class="impact-flash" id="impactFlash"></div>
+
+    <div id="viewportShake">
+      <!-- Title: Syne font & Level 3 Compact Size -->
+      <div class="title-stage" id="titleStage">
+        <div class="title-row">
+          <div class="word-prompt" id="wordPrompt"></div>
+          <div class="word-database" id="wordDatabase"></div>
+        </div>
+        <div class="specular-beam"></div>
+      </div>
+
+      <!-- Laser Beam Loader -->
+      <div class="loader-container" id="loaderContainer">
+        <div class="loader-laser">
+          <div class="laser-track">
+            <div class="laser-fill" id="laserFill">
+              <span class="laser-bead"></span>
+            </div>
+          </div>
+          <div class="laser-meta">
+            <div class="status">
+              <span class="dot"></span>
+              <span id="laserStatus">Memuat Prompt Database...</span>
+            </div>
+            <div class="percent" id="laserPercent">0%</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 3. Floating Replay Controller -->
+  <div class="floating-replay-bar">
+    <button class="btn-replay" id="btnReplay">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+      <span>PUTAR ULANG (REPLAY)</span>
+    </button>
+    <div class="spec-info">
+      <span>Font: <strong>Syne</strong></span> &bull; 
+      <span>Ukuran: <strong>Level 3 (Compact)</strong></span> &bull; 
+      <span>Selesai 100% &rarr; <strong>Langsung Masuk</strong></span>
+    </div>
+  </div>
+
+  <script>
+    const wordPromptEl = document.getElementById('wordPrompt');
+    const wordDatabaseEl = document.getElementById('wordDatabase');
+    const titleStageEl = document.getElementById('titleStage');
+    const viewportShakeEl = document.getElementById('viewportShake');
+    const impactFlashEl = document.getElementById('impactFlash');
+    const laserFillEl = document.getElementById('laserFill');
+    const laserPercentEl = document.getElementById('laserPercent');
+    const laserStatusEl = document.getElementById('laserStatus');
+    const introOverlayEl = document.getElementById('introOverlay');
+    const btnReplay = document.getElementById('btnReplay');
+
+    const currentSpeed = 0.75; // Cinematic tempo
+    let progressTimer = null;
+
+    // Staggered letters
+    function setupKineticTypography() {
+      wordPromptEl.innerHTML = '';
+      'PROMPT'.split('').forEach((char, index) => {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = char;
+        span.style.animationDelay = `${(0.08 + index * 0.045) * (1 / currentSpeed)}s`;
+        wordPromptEl.appendChild(span);
+      });
+
+      wordDatabaseEl.innerHTML = '';
+      'DATABASE'.split('').forEach((char, index) => {
+        const span = document.createElement('span');
+        span.className = 'char';
+        span.textContent = char;
+        span.style.animationDelay = `${(0.32 + index * 0.045) * (1 / currentSpeed)}s`;
+        wordDatabaseEl.appendChild(span);
+      });
+    }
+
+    // Laser Beam Animation & Instant Entrance on 100%
+    function animateLaser() {
+      clearInterval(progressTimer);
+
+      let val = 0;
+      const totalDuration = 2200 * (1 / currentSpeed);
+      const interval = 25;
+      const step = 100 / (totalDuration / interval);
+
+      progressTimer = setInterval(() => {
+        val += step;
+        if (val >= 100) {
+          val = 100;
+          clearInterval(progressTimer);
+          if (laserFillEl) laserFillEl.style.width = '100%';
+          if (laserPercentEl) laserPercentEl.textContent = '100%';
+          if (laserStatusEl) laserStatusEl.textContent = 'Selesai';
+
+          // LOADING SELESAI -> LANGSUNG MASUK KE APLIKASI
+          setTimeout(() => {
+            introOverlayEl.classList.add('fade-out');
+          }, 180);
+        } else {
+          if (val > 70) {
+            if (laserStatusEl) laserStatusEl.textContent = 'Menghubungkan Growth Journal...';
+          } else if (val > 35) {
+            if (laserStatusEl) laserStatusEl.textContent = 'Menyusun SCQA Framework...';
+          }
+          if (laserFillEl) laserFillEl.style.width = `${val}%`;
+          if (laserPercentEl) laserPercentEl.textContent = `${Math.floor(val)}%`;
+        }
+      }, interval);
+    }
+
+    // Trigger Motion Sequence
+    function triggerMotion() {
+      // Bring overlay back
+      introOverlayEl.classList.remove('fade-out');
+      titleStageEl.classList.remove('anim-active');
+      viewportShakeEl.classList.remove('shaking');
+      impactFlashEl.classList.remove('flashing');
+
+      setupKineticTypography();
+
+      // Force browser reflow
+      void titleStageEl.offsetWidth;
+
+      // Start animation
+      titleStageEl.classList.add('anim-active');
+      animateLaser();
+
+      // Tactile punch
+      setTimeout(() => {
+        viewportShakeEl.classList.add('shaking');
+        impactFlashEl.classList.add('flashing');
+      }, 210 * (1 / currentSpeed));
+    }
+
+    // Replay Trigger
+    btnReplay.addEventListener('click', triggerMotion);
+
+    // Spacebar to Replay
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        triggerMotion();
+      }
+    });
+
+    // Initial Mount
+    triggerMotion();
+  </script>
+</body>
+</html>
