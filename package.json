@@ -5,8 +5,7 @@
   "type": "module",
   "scripts": {
     "start": "tsx server.ts",
-    "dev": "tsx server.ts",
-    "build": "vite build && cp dist/index.html public/PromptsDatabase.html && node fix.cjs",
+    "build": "vite build && node fix.cjs",
     "preview": "vite preview",
     "clean": "rm -rf dist",
     "lint": "tsc --noEmit"
